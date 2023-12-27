@@ -2,6 +2,45 @@
 
 Ruby + RBS = claret
 
+```ruby
+# examples/hello_world.rb
+
+class HelloWorld
+  def initialize(String @name = "world")
+  end
+
+  def say_it_to(String name = @name, (Integer | Float) age = (1 + 2))
+    puts "Hello #{name}! You are #{age} years old."
+  end
+end
+
+# 42 should be an Integer or Float
+HelloWorld.new.say_it_to("bob", "42")
+```
+
+```
+$ ./exe/claret start examples/hello_world.rb
+--- steep output ---
+# Type checking files:
+
+............................................................................F........
+
+lib/examples/hello_world.rb:19:32: [error] Cannot pass a value of type `::String` as an argument of type `(::Integer | ::Float)`
+│   ::String <: (::Integer | ::Float)
+│     ::String <: ::Integer
+│       ::Object <: ::Integer
+│         ::BasicObject <: ::Integer
+│
+│ Diagnostic ID: Ruby::ArgumentTypeMismatch
+│
+└ HelloWorld.new.say_it_to("bob", "42")
+                                  ~~~~
+
+Detected 1 problem from 1 file
+--- End steep output ---
+🚨 Something went wrong with steep!
+```
+
 
 `claret` is:
 
