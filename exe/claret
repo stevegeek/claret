@@ -1,0 +1,134 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "claret"
+require "thor"
+require "open3"
+
+class ClaretCLI < Thor
+  include Thor::Actions
+
+  option :debug, type: :boolean, default: false
+  option :quiet, type: :boolean, default: false
+  option :time, type: :boolean, default: false # TODO: add timing to all commands
+  def initialize(*args)
+    super
+  end
+
+  desc "execute SCRIPT", "Run the typed Ruby SCRIPT"
+  def execute(relative_path)
+    # Run command - performs type to @sig comment conversion
+    require "ruby-next/language"
+
+    path = File.expand_path(File.join(Dir.pwd, relative_path))
+    RubyNext::Language.include_patterns << path
+
+    require "ruby-next/language/runtime"
+
+    require path
+  end
+
+  desc "ruby SCRIPT", "[Alias of 'execute']"
+  def ruby(relative_path)
+    invoke :execute, [relative_path]
+  end
+
+  desc "start SCRIPT", "Run type checking and then execute the SCRIPT"
+  def start(relative_path)
+    # Run steep and then run the application
+    invoke :check, [relative_path], options
+    say "\n>Check passed, run now...\n\n"
+    # TODO: we have the compiled code in .claret/lib, so we can just run that
+    invoke :execute, [relative_path], options
+  end
+
+  desc "check [SCRIPT]", "Check the given file for type errors, or all files if none given"
+  def check(relative_path = nil)
+    # Check command - include watch mode
+    # Run ruby next and get output files written to disk
+    # TODO: run irbs to extract the RBS Irbs::Core (which loads from disk)
+    # then run steep on extracted RBS
+
+    # But irbs comments... how will we add them as we parse?? we need to know where to insert the comment, which
+    # isnt trivial?
+
+    # write Steepfile to /.claret/Steepfile
+    # write to /.claret/sig
+    empty_directory ".claret/lib"
+    empty_directory ".claret/sig"
+
+    create_file ".claret/Steepfile" do
+      <<~STEEPFILE
+        D = Steep::Diagnostic
+        target :app do
+          signature "sig"
+          check "lib"
+        end
+      STEEPFILE
+    end
+
+    create_file ".claret/.rbnextrc" do
+      # Get absolute path to lib/claret/rewriters which is relative to this files path but one level up
+      path = File.expand_path("../lib/claret/rewriters", __dir__)
+      imports = Dir.glob("#{path}/*.rb").map { File.expand_path(_1) }.map { "  --import-rewriter=#{_1}" }.join("\n")
+      <<~RUBY_NEXT
+        nextify: |
+          --min-version=3.2
+          --single-version
+        #{imports}
+          --output=lib
+      RUBY_NEXT
+    end
+
+    inside ".claret" do
+      # Get file name and path from relative_path and use that for rbs (just change ext to .rbs)
+
+      input = File.expand_path("../#{relative_path}")
+      output = File.join("lib/", relative_path)
+      # run  ruby-next nextify #{input} -o patn -V
+      run_command("ruby-next", "bundle", "exec", "ruby-next", "nextify", input, "-o", output, "-V", "--no-refine")
+
+      run_command("irbs", "bundle", "exec", "irbs", output, "-o", "sig/#{File.basename(relative_path, ".rb")}.rbs")
+
+      # TODO: strip # @sig comments from source now that we have the RBS
+
+      run_command("steep", "bundle", "exec", "steep", "check")
+    end
+  end
+
+  desc "steep [SCRIPT]", "[Alias of 'check']"
+  def steep(relative_path = nil)
+    invoke :check, relative_path
+  end
+
+  desc "remove", "Remove all type annotations from the project"
+  def remove
+    # TODO: Remove command - remove all type annotations
+  end
+
+  private
+
+  def run_command(type, *args)
+    options[:debug] && say("Debug enabled for command #{type}.")
+    stdout, status = Open3.capture2({"DEBUG" => "1"}, *args)
+    # TODO: output should be a debug switch
+    if status != 0
+      unless options[:quiet]
+        say_output(type, stdout)
+        say_error "🚨 Something went wrong with #{type}!"
+      end
+      exit 1
+    else
+      say_output(type, stdout) if options[:debug]
+      say "🤘 all good with #{type}!" unless options[:quiet]
+    end
+  end
+
+  def say_output(type, output)
+    say "--- #{type} output ---"
+    say output
+    say "--- End #{type} output ---"
+  end
+end
+
+ClaretCLI.start(ARGV)
