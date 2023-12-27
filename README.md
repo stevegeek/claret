@@ -25,7 +25,7 @@ $ ./exe/claret start examples/hello_world.rb
 
 ............................................................................F........
 
-lib/examples/hello_world.rb:19:32: [error] Cannot pass a value of type `::String` as an argument of type `(::Integer | ::Float)`
+lib/examples/hello_world.rb:13:32: [error] Cannot pass a value of type `::String` as an argument of type `(::Integer | ::Float)`
 │   ::String <: (::Integer | ::Float)
 │     ::String <: ::Integer
 │       ::Object <: ::Integer
@@ -42,23 +42,19 @@ Detected 1 problem from 1 file
 ```
 
 
-`claret` is:
+### `claret` is:
 
 -   an attempt at creating a typed Ruby syntax that incorporates RBS like types directly into the Ruby source
 -   A CLI too that transpiles the typed Ruby to pure Ruby and an RBS file, thus allowing the existing Ruby runtime and type checker steep to do the heavy lifting
 
-
-
-`claret` aims to be
+### `claret` aims to be
 
 -   optional: you can type only some parts of your application (similarly to RBS) and mix typed and not typed code
 -   debugging friendly: runtime error source locations will map relatively well to their typed source counterpart
 -   runtime friendly: claret is built with Ruby-next meaning transpilation can happen at runtime too using the ruby-next require hook
 -   escape-able: you can use the CLI to erase the type information and emit the pure Ruby code should you wish to stop using it
 
-
-
-`claret` future directions:
+### `claret` future directions:
 
 -   build an AST based parser allowing for more accurate transpilation
 -   Ability to also emit Crystal code allowing for the possibility to create single code base Ruby/Crystal projects (assuming you only use language features which are comparable to both languages)
@@ -68,7 +64,6 @@ Detected 1 problem from 1 file
 ## Warning: Experimental Tool
 
 Please note that claret is currently an experimental tool, and as such, it is subject to change or may never reach a stable release. The syntax for inline type signatures could also evolve, potentially causing compatibility issues with certain Ruby codebases. Proceed with caution and be prepared for possible adjustments in the future.
-
 
 
 ## Installation
