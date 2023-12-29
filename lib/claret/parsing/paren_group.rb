@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "forwardable"
+
 module Claret
   module Parsing
     PAREN_MAP = {
@@ -9,6 +11,7 @@ module Claret
     }.freeze
 
     ParenGroup = Data.define(:items, :paren_type, :start_pos, :end_pos) do
+      extend Forwardable
       include Enumerable
 
       def paren_group?
@@ -19,6 +22,10 @@ module Claret
         false
       end
 
+      def blank?
+        items.empty? || items.all?(&:blank?)
+      end
+
       def paren_type_reverse
         return unless paren_type
         PAREN_MAP[paren_type].tap do |char|
@@ -26,30 +33,12 @@ module Claret
         end
       end
 
-      def size
-        items.size
-      end
-
-      def last
-        items.last
-      end
-
-      def first
-        items.first
-      end
-
-      def each(&block)
-        items.each(&block)
-      end
-
       def append(item)
         items << item
       end
       alias_method :<<, :append
 
-      def index(...)
-        items.index(...)
-      end
+      def_delegators :items, :each, :index, :size, :first, :last
 
       def [](index)
         if index.is_a?(Range)
