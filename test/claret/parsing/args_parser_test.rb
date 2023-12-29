@@ -16,7 +16,7 @@ module Claret
           nil,
           Arg.new(name: "and", type: nil, name_raw_str: " and", start_pos: 49, end_pos: 51),
           Arg.new(name: "args", type: "more", name_raw_str: "args", start_pos: 54, end_pos: 62),
-          Arg.new(name: "here", type: "type", name_raw_str: "here:", start_pos: 65, end_pos: 73)
+          Arg.new(name: "here", type: "type", name_raw_str: "here: ", start_pos: 65, end_pos: 73)
         ]
         assert_equal expected, args.parse
       end
@@ -44,6 +44,56 @@ module Claret
         args = ArgsParser.new(parens.first)
         expected = [
           Arg.new(name: "single_arg", type: "type", name_raw_str: "single_arg", start_pos: 1, end_pos: 15)
+        ]
+        assert_equal expected, args.parse
+      end
+
+      def test_parse_with_arg_and_nilable_type
+        scanner = StringScanner.new("(?type single_arg)")
+        parens = ParensParser.new(scanner).parse
+        args = ArgsParser.new(parens.first)
+        expected = [
+          Arg.new(name: "single_arg", type: "?type", name_raw_str: "single_arg", start_pos: 1, end_pos: 16)
+        ]
+        assert_equal expected, args.parse
+      end
+
+      def test_parse_with_optional_arg_and_no_type
+        scanner = StringScanner.new("(single_arg = 1)")
+        parens = ParensParser.new(scanner).parse
+        args = ArgsParser.new(parens.first)
+        expected = [
+          Arg.new(name: "single_arg", type: "?untyped", name_raw_str: "single_arg = 1", start_pos: 1, end_pos: 10)
+        ]
+        assert_equal expected, args.parse
+      end
+
+      def test_parse_with_optional_kwarg_and_no_type
+        scanner = StringScanner.new("(single_arg: 1)")
+        parens = ParensParser.new(scanner).parse
+        args = ArgsParser.new(parens.first)
+        expected = [
+          Arg.new(name: "single_arg", type: "?untyped", name_raw_str: "single_arg: 1", start_pos: 1, end_pos: 10)
+        ]
+        assert_equal expected, args.parse
+      end
+
+      def test_parse_with_optional_arg_and_type
+        scanner = StringScanner.new("(Integer single_arg = 1)")
+        parens = ParensParser.new(scanner).parse
+        args = ArgsParser.new(parens.first)
+        expected = [
+          Arg.new(name: "single_arg", type: "?Integer", name_raw_str: "single_arg = 1", start_pos: 1, end_pos: 18)
+        ]
+        assert_equal expected, args.parse
+      end
+
+      def test_parse_with_optional_kwarg_and_type
+        scanner = StringScanner.new("(Integer single_arg: 1)")
+        parens = ParensParser.new(scanner).parse
+        args = ArgsParser.new(parens.first)
+        expected = [
+          Arg.new(name: "single_arg", type: "?Integer", name_raw_str: "single_arg: 1", start_pos: 1, end_pos: 18)
         ]
         assert_equal expected, args.parse
       end

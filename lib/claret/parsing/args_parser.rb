@@ -18,6 +18,9 @@ module Claret
             create_arg_with_identifier_and_type(first_part, second_part)
           elsif arg_type_identifier_pair?(first_part)
             create_arg_with_identifier_and_type_pair(first_part)
+          else
+            debug "Unknown argument that can not be parsed: #{group}"
+            nil
           end
         end
       end
@@ -27,23 +30,30 @@ module Claret
       def create_arg_with_identifier(literal)
         name = clean_arg_identifier(literal)
         debug "Arg with identifier: #{name}"
-        create_argument(name, nil, literal, arg_start_pos(literal, name), arg_end_pos(literal, name))
+        # If arg is optional, its type will be set as ?untyped
+        create_argument(
+          name,
+          make_type_optional_if_has_default(literal),
+          literal,
+          arg_start_pos(literal, name),
+          arg_end_pos(literal, name)
+        )
       end
 
-      def create_arg_with_identifier_and_type(type_group, name_literal)
-        raise unless type_group.paren_group? || arg_type?(type_group)
+      def create_arg_with_identifier_and_type(type_group_or_literal, name_literal)
+        raise unless type_group_or_literal.paren_group? || literal_is_type?(type_group_or_literal)
         name = clean_arg_identifier(name_literal)
-        type = type_group.to_code
+        type = make_type_optional_if_has_default(name_literal, type_group_or_literal.to_code)
         debug "Arg with identifier and type: #{name} - #{type}"
-        create_argument(name, type, name_literal, type_group.start_pos, arg_end_pos(name_literal, name))
+        create_argument(name, type, name_literal, type_group_or_literal.start_pos, arg_end_pos(name_literal, name))
       end
 
       def create_arg_with_identifier_and_type_pair(literal)
-        type_literal, name_literal, *_rest = literal.split(" ")
-        raise unless arg_type?(type_literal)
+        type_literal, name_literal = literal.split(" ", 2)
+        raise unless literal_is_type?(type_literal)
         name = clean_arg_identifier(name_literal)
-        type = type_literal.to_code
-        debug "Arg with identifier and type: #{name} - #{type}"
+        type = make_type_optional_if_has_default(name_literal, type_literal.to_code)
+        debug "Arg with identifier and type: '#{name}' is a '#{type}'"
         create_argument(name, type, name_literal, type_literal.start_pos, arg_end_pos(name_literal, name))
       end
 
@@ -59,20 +69,37 @@ module Claret
         item.start_pos + item.index(name) + name.size - 1
       end
 
-      def clean_arg_identifier(item)
-        item.match(/^\s*([\w_@]+)\s*([=:]|\z)/).captures.first
-      end
+      ARG_TYPE_MATCHER = "[\\w_?:]+"
+      ARG_NAME_MATCHER = "[\\w_@]+"
+      ARG_NAME_SUFFIXES = "[=:]|\\z"
 
       def arg_identifier?(item)
-        item.paren_literal? && item.match?(/^\s*([\w_@]+)\s*([=:]|\z)/)
+        item.paren_literal? && item.match?(/^\s*(#{ARG_NAME_MATCHER})\s*(#{ARG_NAME_SUFFIXES})/o)
+      end
+
+      def clean_arg_identifier(item)
+        item.match(/^\s*(#{ARG_NAME_MATCHER})\s*(#{ARG_NAME_SUFFIXES})/o).captures.first
       end
 
       def arg_type_identifier_pair?(item)
-        item.paren_literal? && item.match(/^\s*([\w_]+)\s+([\w_@]+)\s*([=:]|\z)/)
+        item.paren_literal? && item.match(/^\s*(#{ARG_TYPE_MATCHER})\s+(#{ARG_NAME_MATCHER})\s*(#{ARG_NAME_SUFFIXES})/o)
       end
 
-      def arg_type?(item)
-        item.match?(/^\s*[\w_]+\s*$/)
+      def literal_is_type?(item)
+        type = item.match(/^\s*(#{ARG_TYPE_MATCHER})\s*$/o)&.captures&.first
+        return unless type
+        # the type cannot include a single colon
+        return if type.count(":") == 1
+        type
+      end
+
+      # TODO: refactor out the parsing of type information to a separate class
+      def make_type_optional_if_has_default(literal, type = nil)
+        # is_optional_positional = literal.include?("=")
+        # is_optional_positional ||= after_name_literal&.match?(/^\s*=/)
+        is_optional_positional = literal.match?(/^\s*#{ARG_NAME_MATCHER}\s*=/o)
+        is_optional_kwarg = literal.match?(/:\s*[\w_@]+/)
+        (is_optional_positional || is_optional_kwarg) ? "?#{type || "untyped"}" : type
       end
 
       # it should group by comma
