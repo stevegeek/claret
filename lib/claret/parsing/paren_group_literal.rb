@@ -1,8 +1,12 @@
 # frozen_string_literal: true
 
+require "forwardable"
+
 module Claret
   module Parsing
     ParenGroupLiteral = Data.define(:literal, :start_pos, :end_pos) do
+      extend Forwardable
+
       def paren_group?
         false
       end
@@ -11,12 +15,21 @@ module Claret
         true
       end
 
-      def include?(...)
-        literal.include?(...)
-      end
+      def_delegators :literal, :size, :empty?, :include?, :index, :match, :match?
 
       def split(...)
-        literal.split(...)
+        literal.split(...).map do
+          start_offset = start_pos + literal.index(_1)
+          ParenGroupLiteral.new(_1, start_offset, start_offset + _1.size - 1)
+        end
+      end
+
+      def merge(other_literal)
+        with(literal: literal + other_literal.literal, end_pos: end_pos + other_literal.size)
+      end
+
+      def blank?
+        literal.strip.empty?
       end
 
       def to_code
