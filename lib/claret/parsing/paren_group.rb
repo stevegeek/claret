@@ -42,7 +42,8 @@ module Claret
 
       def [](index)
         if index.is_a?(Range)
-          ParenGroup.new(items[index], paren_type)
+          range = items[index]
+          ParenGroup.new(range, paren_type, range.first.start_pos, range.last.end_pos)
         else
           items[index]
         end

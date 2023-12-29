@@ -69,6 +69,12 @@ module Claret
         assert_equal literal, @paren_group[0]
       end
 
+      def test_brackets_range
+        literal = ParenGroupLiteral.new("test", 0, 3)
+        @paren_group << literal
+        assert_equal ParenGroup.new([literal], "(", 0, 3), @paren_group[0..0]
+      end
+
       def test_to_code
         @paren_group << ParenGroupLiteral.new("test", 0, 3)
         assert_equal "(test)", @paren_group.to_code
