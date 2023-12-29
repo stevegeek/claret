@@ -63,6 +63,23 @@ module Claret
         assert_equal expected, parens.parse
       end
 
+      def test_one_nilable_type
+        scanner = StringScanner.new("(?Type hello)")
+        parens = ParensParser.new(scanner)
+        expected = ParenGroup.new(
+          [
+            ParenGroup.new(
+              [
+                ParenGroupLiteral.new("?Type hello", 1, 11)
+              ],
+              "(", 0, 12
+            )
+          ],
+          nil, 0, 12
+        )
+        assert_equal expected, parens.parse
+      end
+
       def test_no_parens
         source = "def test, foo # comment, about this"
         scanner = StringScanner.new(source)
