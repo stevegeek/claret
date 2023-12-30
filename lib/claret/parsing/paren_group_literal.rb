@@ -28,6 +28,16 @@ module Claret
         with(literal: literal + other_literal.literal, end_pos: end_pos + other_literal.size)
       end
 
+      def prepend(str)
+        new_literal = str + literal
+        with(literal: new_literal, end_pos: start_pos + new_literal.size - 1)
+      end
+
+      def append(str)
+        new_literal = literal + str
+        with(literal: new_literal, end_pos: end_pos + str.size)
+      end
+
       def blank?
         literal.strip.empty?
       end

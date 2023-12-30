@@ -11,11 +11,15 @@ module Claret
 
       def parse
         group_paren_parts_into_args.map do |group|
-          first_part, second_part = group.first, group.last
+          first_part, second_part, third_part = group[0..2]
           if group.size == 1 && arg_identifier?(first_part)
             create_arg_with_identifier(first_part)
           elsif group.size == 2 && arg_identifier?(second_part)
             create_arg_with_identifier_and_type(first_part, second_part)
+          elsif group.size == 3 && first_part.paren_literal? && second_part.paren_group? && arg_identifier?(third_part) && first_part.match?(/\A\s*\?\s*\z/)
+            # Special case when "?" literal is before a type group
+            optional_type = second_part.to_literal.prepend("?")
+            create_arg_with_identifier_and_type(optional_type, third_part)
           elsif arg_type_identifier_pair?(first_part)
             create_arg_with_identifier_and_type_pair(first_part)
           else
@@ -41,7 +45,7 @@ module Claret
       end
 
       def create_arg_with_identifier_and_type(type_group_or_literal, name_literal)
-        raise unless type_group_or_literal.paren_group? || literal_is_type?(type_group_or_literal)
+        raise "The type is invalid" unless type_group_or_literal.paren_group? || literal_is_type?(type_group_or_literal)
         name = clean_arg_identifier(name_literal)
         type = make_type_optional_if_has_default(name_literal, type_group_or_literal.to_code)
         debug "Arg with identifier and type: #{name} - #{type}"
@@ -69,7 +73,7 @@ module Claret
         item.start_pos + item.index(name) + name.size - 1
       end
 
-      ARG_TYPE_MATCHER = "[\\w_?:]+"
+      ARG_TYPE_MATCHER = "[\\s\\w_?:()&|\\[\\]{},]+"
       ARG_NAME_MATCHER = "[\\w_@]+"
       ARG_NAME_SUFFIXES = "[=:]|\\z"
 
@@ -95,8 +99,7 @@ module Claret
 
       # TODO: refactor out the parsing of type information to a separate class
       def make_type_optional_if_has_default(literal, type = nil)
-        # is_optional_positional = literal.include?("=")
-        # is_optional_positional ||= after_name_literal&.match?(/^\s*=/)
+        return type if type&.strip&.start_with?("?")
         is_optional_positional = literal.match?(/^\s*#{ARG_NAME_MATCHER}\s*=/o)
         is_optional_kwarg = literal.match?(/:\s*[\w_@]+/)
         (is_optional_positional || is_optional_kwarg) ? "?#{type || "untyped"}" : type

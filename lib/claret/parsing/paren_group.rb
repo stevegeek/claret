@@ -54,6 +54,11 @@ module Claret
         "#{paren_type}#{body.join}#{paren_type_reverse}"
       end
 
+      def to_literal
+        literal_str = to_code
+        ParenGroupLiteral.new(literal_str, start_pos, start_pos + literal_str.size - 1)
+      end
+
       def to_s
         body = map { _1.to_s }
         "#{paren_type}#{body.join}#{paren_type_reverse}"

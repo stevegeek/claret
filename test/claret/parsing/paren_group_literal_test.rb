@@ -80,6 +80,20 @@ module Claret
         assert_equal 6, merged_literal.end_pos
       end
 
+      def test_prepend
+        literal1 = ParenGroupLiteral.new("test", 0, 3)
+        merged_literal = literal1.prepend("ing")
+        assert_equal "ingtest", merged_literal.literal
+        assert_equal 6, merged_literal.end_pos
+      end
+
+      def test_append
+        literal1 = ParenGroupLiteral.new("test", 0, 3)
+        merged_literal = literal1.append("ing")
+        assert_equal "testing", merged_literal.literal
+        assert_equal 6, merged_literal.end_pos
+      end
+
       def test_blank?
         refute @paren_group_literal.blank?
         blank_literal = ParenGroupLiteral.new(" ", 0, 0)
