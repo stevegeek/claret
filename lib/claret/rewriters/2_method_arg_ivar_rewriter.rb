@@ -1,7 +1,6 @@
 require "strscan"
 
-require_relative "../utils/logging"
-require_relative "../parsing/parens"
+require_relative "../required"
 
 module Claret
   module Rewriters
