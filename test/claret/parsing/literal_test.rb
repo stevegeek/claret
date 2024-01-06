@@ -7,7 +7,7 @@ module Claret
   module Parsing
     class ParenGroupLiteralTest < Minitest::Test
       def setup
-        @paren_group_literal = ParenGroupLiteral.new("test", 0, 3)
+        @paren_group_literal = Literal.new("test", 0, 3)
       end
 
       def test_paren_group?
@@ -53,7 +53,7 @@ module Claret
       end
 
       def test_split_with_positions
-        literal = ParenGroupLiteral.new("testing", 0, 6)
+        literal = Literal.new("testing", 0, 6)
         split_literals = literal.split("t")
 
         assert_equal 3, split_literals.size
@@ -72,8 +72,8 @@ module Claret
       end
 
       def test_merge
-        literal1 = ParenGroupLiteral.new("test", 0, 3)
-        literal2 = ParenGroupLiteral.new("ing", 0, 2)
+        literal1 = Literal.new("test", 0, 3)
+        literal2 = Literal.new("ing", 0, 2)
         merged_literal = literal1.merge(literal2)
 
         assert_equal "testing", merged_literal.literal
@@ -81,14 +81,14 @@ module Claret
       end
 
       def test_prepend
-        literal1 = ParenGroupLiteral.new("test", 0, 3)
+        literal1 = Literal.new("test", 0, 3)
         merged_literal = literal1.prepend("ing")
         assert_equal "ingtest", merged_literal.literal
         assert_equal 6, merged_literal.end_pos
       end
 
       def test_append
-        literal1 = ParenGroupLiteral.new("test", 0, 3)
+        literal1 = Literal.new("test", 0, 3)
         merged_literal = literal1.append("ing")
         assert_equal "testing", merged_literal.literal
         assert_equal 6, merged_literal.end_pos
@@ -96,7 +96,7 @@ module Claret
 
       def test_blank?
         refute @paren_group_literal.blank?
-        blank_literal = ParenGroupLiteral.new(" ", 0, 0)
+        blank_literal = Literal.new(" ", 0, 0)
         assert blank_literal.blank?
       end
 
