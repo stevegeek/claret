@@ -5,10 +5,22 @@ require "forwardable"
 module Claret
   module Parsing
     PAREN_MAP = {
+      "\"" => "\"",
+      "'" => "'",
       "(" => ")",
       "{" => "}",
       "[" => "]"
     }.freeze
+
+    # These are the parens that can be nested inside of each other
+    OPENING_CHARS = ["(", "{", "["].freeze
+    CLOSING_CHARS = [")", "}", "]"].freeze
+
+    # Greedy parens are ones that nothing can be nested inside of (the parser will consume characters until another
+    # character is found (if escaped with a backslash they will be ignored)
+    GREEDY_CHARS = ["\"", "'"].freeze
+
+    ENDLESS_GREEDY_CHARS = ["#"].freeze
 
     ParenGroup = Data.define(:items, :paren_type, :start_pos, :end_pos) do
       extend Forwardable
@@ -26,6 +38,8 @@ module Claret
         items.empty? || items.all?(&:blank?)
       end
 
+      def_delegators :to_literal, :match, :match?
+
       def paren_type_reverse
         return unless paren_type
         PAREN_MAP[paren_type].tap do |char|
@@ -34,16 +48,20 @@ module Claret
       end
 
       def append(item)
+        item = Literal.new(item, end_pos + 1, end_pos + item.size) if item.is_a?(String)
         items << item
+        self
       end
       alias_method :<<, :append
 
-      def_delegators :items, :each, :index, :size, :first, :last
+      def_delegators :items, :each, :index, :rindex, :size, :first, :last
 
       def [](index)
         if index.is_a?(Range)
           range = items[index]
-          ParenGroup.new(range, paren_type, range.first.start_pos, range.last.end_pos)
+          first = range.first
+          last = range.last
+          ParenGroup.new(range, paren_type, first&.start_pos, last&.end_pos)
         else
           items[index]
         end
@@ -56,7 +74,7 @@ module Claret
 
       def to_literal
         literal_str = to_code
-        ParenGroupLiteral.new(literal_str, start_pos, start_pos + literal_str.size - 1)
+        Literal.new(literal_str, start_pos, start_pos + literal_str.size - 1)
       end
 
       def to_s

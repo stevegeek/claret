@@ -20,7 +20,7 @@ module Claret
 
       def test_blank?
         assert @paren_group.blank?
-        @paren_group << ParenGroupLiteral.new("test", 0, 3)
+        @paren_group << Literal.new("test", 0, 3)
         refute @paren_group.blank?
       end
 
@@ -29,59 +29,59 @@ module Claret
       end
 
       def test_append
-        @paren_group.append(ParenGroupLiteral.new("test", 0, 3))
+        @paren_group.append(Literal.new("test", 0, 3))
         assert_equal 1, @paren_group.size
       end
 
       def test_each
-        @paren_group << ParenGroupLiteral.new("test", 0, 3)
+        @paren_group << Literal.new("test", 0, 3)
         @paren_group.each do |item|
           assert item.paren_literal?
         end
       end
 
       def test_index
-        literal = ParenGroupLiteral.new("test", 0, 3)
+        literal = Literal.new("test", 0, 3)
         @paren_group << literal
         assert_equal 0, @paren_group.index(literal)
       end
 
       def test_size
-        @paren_group << ParenGroupLiteral.new("test", 0, 3)
+        @paren_group << Literal.new("test", 0, 3)
         assert_equal 1, @paren_group.size
       end
 
       def test_first
-        literal = ParenGroupLiteral.new("test", 0, 3)
+        literal = Literal.new("test", 0, 3)
         @paren_group << literal
         assert_equal literal, @paren_group.first
       end
 
       def test_last
-        literal = ParenGroupLiteral.new("test", 0, 3)
+        literal = Literal.new("test", 0, 3)
         @paren_group << literal
         assert_equal literal, @paren_group.last
       end
 
       def test_brackets
-        literal = ParenGroupLiteral.new("test", 0, 3)
+        literal = Literal.new("test", 0, 3)
         @paren_group << literal
         assert_equal literal, @paren_group[0]
       end
 
       def test_brackets_range
-        literal = ParenGroupLiteral.new("test", 0, 3)
+        literal = Literal.new("test", 0, 3)
         @paren_group << literal
         assert_equal ParenGroup.new([literal], "(", 0, 3), @paren_group[0..0]
       end
 
       def test_to_code
-        @paren_group << ParenGroupLiteral.new("test", 0, 3)
+        @paren_group << Literal.new("test", 0, 3)
         assert_equal "(test)", @paren_group.to_code
       end
 
       def test_to_s
-        @paren_group << ParenGroupLiteral.new("test", 0, 3)
+        @paren_group << Literal.new("test", 0, 3)
         assert_equal "(test)", @paren_group.to_s
       end
     end
