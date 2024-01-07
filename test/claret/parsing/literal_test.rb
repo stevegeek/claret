@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "claret/parsing/paren_group_literal"
 
 module Claret
   module Parsing
-    class ParenGroupLiteralTest < Minitest::Test
+    class LiteralTest < Minitest::Test
       def setup
         @paren_group_literal = Literal.new("test", 0, 3)
       end
@@ -53,22 +52,22 @@ module Claret
       end
 
       def test_split_with_positions
-        literal = Literal.new("testing", 0, 6)
+        literal = Literal.new("testing", 1, 7)
         split_literals = literal.split("t")
 
         assert_equal 3, split_literals.size
 
         assert_equal "", split_literals[0].literal
-        assert_equal 0, split_literals[0].start_pos
-        assert_equal(-1, split_literals[0].end_pos)
+        assert_equal 1, split_literals[0].start_pos
+        assert_equal(1, split_literals[0].end_pos)
 
         assert_equal "es", split_literals[1].literal
-        assert_equal 1, split_literals[1].start_pos
-        assert_equal 2, split_literals[1].end_pos
+        assert_equal 2, split_literals[1].start_pos
+        assert_equal 3, split_literals[1].end_pos
 
         assert_equal "ing", split_literals[2].literal
-        assert_equal 4, split_literals[2].start_pos
-        assert_equal 6, split_literals[2].end_pos
+        assert_equal 5, split_literals[2].start_pos
+        assert_equal 7, split_literals[2].end_pos
       end
 
       def test_merge
