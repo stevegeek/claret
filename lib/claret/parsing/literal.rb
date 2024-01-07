@@ -22,7 +22,7 @@ module Claret
 
         results, last_index = handle_starting_delimiter(delimiter_positions, delimiter)
         results, last_index = create_substrings(results, delimiter_positions, delimiter, last_index, limit)
-        handle_last_substring(results, last_index).map do |result|
+        handle_last_substring(results, delimiter_positions, delimiter, last_index).map do |result|
           Literal.new(result[:substring], start_pos + result[:start_index], start_pos + result[:end_index])
         end
       end
@@ -83,7 +83,7 @@ module Claret
         [results, last_index]
       end
 
-      def handle_last_substring(results, last_index)
+      def handle_last_substring(results, delimiter_positions, delimiter, last_index)
         literal_len = literal.length
         if last_index < literal_len
           results << {substring: literal[last_index..-1], start_index: last_index, end_index: literal_len - 1}
