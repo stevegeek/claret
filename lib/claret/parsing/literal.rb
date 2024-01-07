@@ -86,7 +86,7 @@ module Claret
       def handle_last_substring(results, delimiter_positions, delimiter, last_index)
         literal_len = literal.length
         if last_index < literal_len
-          results << {substring: literal[last_index..-1], start_index: last_index, end_index: literal_len - 1}
+          results << {substring: literal[last_index..], start_index: last_index, end_index: literal_len - 1}
         elsif last_index == literal_len && delimiter_positions.last == literal_len - delimiter.length
           # Handle the case where the string ends with the delimiter?
         end
