@@ -19,6 +19,10 @@ module Claret
         )
       end
 
+      def ruby_name
+        name.tr("@", "")
+      end
+
       def positional?
         method_arg_type == :positional
       end

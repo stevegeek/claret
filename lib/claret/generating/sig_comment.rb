@@ -8,10 +8,14 @@ module Claret
 
       def generate
         arg_sig = @args&.map do |arg|
-          str = if arg.positional?
-            "#{arg.type} #{arg.name}"
-          else
-            "#{arg.name}: #{arg.type}"
+          str = if arg.positional? && arg.type
+            "#{arg.type} #{arg.ruby_name}"
+          elsif arg.positional?
+            arg.ruby_name
+          elsif arg.keyword? && arg.type
+            "#{arg.ruby_name}: #{arg.type}"
+          elsif arg.keyword?
+            "#{arg.ruby_name}:"
           end
           (arg.optional? && !str.start_with?("?")) ? "?#{str}" : str
         end

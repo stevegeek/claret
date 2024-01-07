@@ -154,4 +154,21 @@ class MethodDefRewriterTest < Minitest::Test
       end
     RUBY
   end
+
+  def test_rewrites_a_arity_1_method_with_ivar
+    new_source = @rewriter.rewrite(<<~RUBY)
+      class Test
+        def test(@name)
+        end
+      end
+    RUBY
+
+    assert_equal(<<~RUBY, new_source)
+      class Test
+        def test( name) # @sig (name) -> void
+          @name = name
+        end
+      end
+    RUBY
+  end
 end

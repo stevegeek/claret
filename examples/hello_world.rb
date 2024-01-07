@@ -1,8 +1,7 @@
 # examples/hello_world.rb
 
 class HelloWorld
-  def initialize(String name = "world")
-    @name = name
+  def initialize(String @name = "world")
   end
 
   def say_it_to(String name = @name, (Integer | Float) age = (1 + 2)) => String
